@@ -1,0 +1,1 @@
+ALTER TABLE `oc_information` ADD top INT(1);

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Information pages links in header</name>
+    <version>1.0</version>
+    <author>Victor Hornets</author>
+    <link>http://gefradah.com</link>
+    <code>vh_informations_links_in_header</code>
+
+    <file path="admin/language/russian/catalog/information.php">
+        <operation>
+            <search><![CDATA[
+            $_['entry_title']            = 'Название статьи';
+            ]]></search>
+            <add position="before"><![CDATA[
+                $_['entry_top']           = 'Отображать сверху';
+                $_['help_top']            = 'Отображать в верхней части сайта (шапка).';
+            ]]></add>
+        </operation>
+    </file>
+
+    <file path="admin/language/english/catalog/information.php">
+        <operation>
+            <search><![CDATA[
+            $_['entry_bottom']           = 'Bottom';
+            ]]></search>
+            <add position="before"><![CDATA[
+                $_['entry_top']           = 'Top';
+                $_['help_top']            = 'Display in the top header.';
+            ]]></add>
+        </operation>
+    </file>
+
+    <file path="admin/view/template/catalog/information_form.tpl">
+        <operation>
+            <search><![CDATA[
+            <label class="col-sm-2 control-label" for="input-bottom"><span data-toggle="tooltip" title="<?php echo $help_bottom; ?>"><?php echo $entry_bottom; ?></span></label>
+            ]]></search>
+            <add position="before"><![CDATA[
+                <label class="col-sm-2 control-label" for="input-top"><span data-toggle="tooltip" title="<?php echo $help_top; ?>"><?php echo $entry_top; ?></span></label>
+                <div class="col-sm-10">
+                  <div class="checkbox">
+                    <label>
+                      <?php if ($top) { ?>
+                      <input type="checkbox" name="top" value="1" checked="checked" id="input-top" />
+                      <?php } else { ?>
+                      <input type="checkbox" name="top" value="1" id="input-top" />
+                      <?php } ?>
+                      &nbsp; </label>
+                  </div>
+                </div>
+            ]]></add>
+        </operation>
+    </file>
+
+    <file path="admin/controller/catalog/information.php">
+        <operation>
+            <search><![CDATA[
+            $data['help_bottom'] = $this->language->get('help_bottom');
+            ]]></search>
+            <add position="before"><![CDATA[
+                $data['help_top'] = $this->language->get('help_top');
+                $data['entry_top'] = $this->language->get('entry_top');
+            ]]></add>
+        </operation>
+
+        <operation>
+            <search><![CDATA[
+            if (isset($this->request->post['bottom'])) {
+            ]]></search>
+            <add position="before"><![CDATA[
+                if (isset($this->request->post['top'])) {
+                    $data['top'] = $this->request->post['top'];
+                } elseif (!empty($information_info)) {
+                    $data['top'] = $information_info['top'];
+                } else {
+                    $data['top'] = 0;
+                }
+            ]]></add>
+        </operation>
+    </file>
+
+    <file path="admin/model/catalog/information.php">
+        <operation>
+            <search><![CDATA[
+            $this->db->query("UPDATE " . DB_PREFIX . "information SET sort_order = '" . (int)$data['sort_order'] . "', bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', status = '" . (int)$data['status'] . "' WHERE information_id = '" . (int)$information_id . "'");
+            ]]></search>
+            <add position="replace"><![CDATA[
+                $this->db->query("UPDATE " . DB_PREFIX . "information SET sort_order = '" . (int)$data['sort_order'] . "', bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', top = '" . (isset($data['top']) ? (int)$data['top'] : 0) . "', status = '" . (int)$data['status'] . "' WHERE information_id = '" . (int)$information_id . "'");
+            ]]></add>
+        </operation>
+
+        <operation>
+            <search><![CDATA[
+            $this->db->query("INSERT INTO " . DB_PREFIX . "information SET sort_order = '" . (int)$data['sort_order'] . "', bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', status = '" . (int)$data['status'] . "'");
+            ]]></search>
+            <add position="replace"><![CDATA[
+                $this->db->query("INSERT INTO " . DB_PREFIX . "information SET sort_order = '" . (int)$data['sort_order'] . "', bottom = '" . (isset($data['bottom']) ? (int)$data['bottom'] : 0) . "', top = '" . (isset($data['top']) ? (int)$data['top'] : 0) . "', status = '" . (int)$data['status'] . "'");
+            ]]></add>
+        </operation>
+    </file>
+
+    <file path="catalog/controller/common/header.php">
+        <operation>
+            <search><![CDATA[
+            $data['cart'] = $this->load->controller('common/cart');
+            ]]></search>
+            <add position="after"><![CDATA[
+                $this->load->model('catalog/information');
+
+                $data['informations'] = array();
+
+                foreach ($this->model_catalog_information->getInformations() as $result) {
+                    if ($result['top']) {
+                        $data['informations'][] = array(
+                            'title' => $result['title'],
+                            'href'  => $this->url->link('information/information', 'information_id=' . $result['information_id'])
+                        );
+                    }
+                }
+            ]]></add>
+        </operation>
+    </file>
+</modification>
